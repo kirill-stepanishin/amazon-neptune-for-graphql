@@ -142,8 +142,8 @@ test('should resolve app sync event gremlin query with argument', () => {
     });
 
     expect(result).toMatchObject({
-        query: "g.V().has('airport', 'code', 'YVR').elementMap()",
-        parameters: {},
+        query: "g.V().has('airport', 'code', getAirportWithGremlin_Airport_code).elementMap()",
+        parameters: { getAirportWithGremlin_Airport_code: 'YVR' },
         language: 'gremlin',
         refactorOutput: null
     });
@@ -401,9 +401,9 @@ test('should inference query from return type (Query0001)', () => {
     const result = resolveGraphDBQuery({queryObjOrStr: 'query MyQuery {\n getAirportByCode(code: \"SEA\") {\n city \n }\n}'});
 
     expect(result).toMatchObject({
-        query: "MATCH (getAirportByCode_Airport:`airport`{code:'SEA'})\n" +
+        query: "MATCH (getAirportByCode_Airport:`airport`{code: $getAirportByCode_Airport_code})\n" +
             'RETURN {city: getAirportByCode_Airport.`city`} LIMIT 1',
-        parameters: {},
+        parameters: { getAirportByCode_Airport_code: "SEA" },
         language: 'opencypher',
         refactorOutput: null
     });
@@ -414,9 +414,9 @@ test('should get neptune_id (Query0002)', () => {
     const result = resolveGraphDBQuery({queryObjOrStr: 'query MyQuery {\n getAirportByCode(code: \"SEA\") {\n _id\n }\n }'});
 
     expect(result).toMatchObject({
-        query: "MATCH (getAirportByCode_Airport:`airport`{code:'SEA'})\n" +
+        query: "MATCH (getAirportByCode_Airport:`airport`{code: $getAirportByCode_Airport_code})\n" +
             'RETURN {_id:ID(getAirportByCode_Airport)} LIMIT 1',
-        parameters: {},
+        parameters: { getAirportByCode_Airport_code: "SEA" },
         language: 'opencypher',
         refactorOutput: null
     });
@@ -427,7 +427,7 @@ test('should inference query with nested types single and array, references in a
     const result = resolveGraphDBQuery({queryObjOrStr: 'query MyQuery {\n getAirportByCode(code: \"YKM\") {\n city\n continentContainsIn {\n desc\n }\n countryContainsIn {\n desc\n }\n airportRoutesOut {\n code\n }\n }\n }'});
 
     expect(result).toMatchObject({
-        query: "MATCH (getAirportByCode_Airport:`airport`{code:'YKM'})\n" +
+        query: "MATCH (getAirportByCode_Airport:`airport`{code: $getAirportByCode_Airport_code})\n" +
             'OPTIONAL MATCH (getAirportByCode_Airport)<-[`getAirportByCode_Airport_continentContainsIn_contains`:`contains`]-(getAirportByCode_Airport_continentContainsIn:`continent`)\n' +
             'OPTIONAL MATCH (getAirportByCode_Airport)<-[`getAirportByCode_Airport_countryContainsIn_contains`:`contains`]-(getAirportByCode_Airport_countryContainsIn:`country`)\n' +
             'OPTIONAL MATCH (getAirportByCode_Airport)-[`getAirportByCode_Airport_airportRoutesOut_route`:`route`]->(getAirportByCode_Airport_airportRoutesOut:`airport`)\n' +
@@ -435,7 +435,7 @@ test('should inference query with nested types single and array, references in a
             'WITH getAirportByCode_Airport, getAirportByCode_Airport_continentContainsIn, getAirportByCode_Airport_airportRoutesOut_collect, {desc: getAirportByCode_Airport_countryContainsIn.`desc`} AS getAirportByCode_Airport_countryContainsIn_one\n' +
             'WITH getAirportByCode_Airport, getAirportByCode_Airport_countryContainsIn_one, getAirportByCode_Airport_airportRoutesOut_collect, {desc: getAirportByCode_Airport_continentContainsIn.`desc`} AS getAirportByCode_Airport_continentContainsIn_one\n' +
             'RETURN {city: getAirportByCode_Airport.`city`, continentContainsIn: getAirportByCode_Airport_continentContainsIn_one, countryContainsIn: getAirportByCode_Airport_countryContainsIn_one, airportRoutesOut: getAirportByCode_Airport_airportRoutesOut_collect} LIMIT 1',
-        parameters: {},
+        parameters: { getAirportByCode_Airport_code: "YKM" },
         language: 'opencypher',
         refactorOutput: null
     });
@@ -446,12 +446,12 @@ test('should get edge properties in nested array (Query0004)', () => {
     const result = resolveGraphDBQuery({queryObjOrStr: 'query MyQuery {\n getAirportByCode(code: \"SEA\") {\n airportRoutesOut {\n code\n route {\n dist\n }\n }\n }\n }\n'});
 
     expect(result).toMatchObject({
-        query: "MATCH (getAirportByCode_Airport:`airport`{code:'SEA'})\n" +
+        query: "MATCH (getAirportByCode_Airport:`airport`{code: $getAirportByCode_Airport_code})\n" +
             'OPTIONAL MATCH (getAirportByCode_Airport)-[`getAirportByCode_Airport_airportRoutesOut_route`:`route`]->(getAirportByCode_Airport_airportRoutesOut:`airport`)\n' +
             'WITH getAirportByCode_Airport, getAirportByCode_Airport_airportRoutesOut, {dist: getAirportByCode_Airport_airportRoutesOut_route.`dist`} AS getAirportByCode_Airport_airportRoutesOut_route_one\n' +
             'WITH getAirportByCode_Airport, CASE WHEN getAirportByCode_Airport_airportRoutesOut IS NULL THEN [] ELSE COLLECT({code: getAirportByCode_Airport_airportRoutesOut.`code`, route: getAirportByCode_Airport_airportRoutesOut_route_one}) END AS getAirportByCode_Airport_airportRoutesOut_collect\n' +
             'RETURN {airportRoutesOut: getAirportByCode_Airport_airportRoutesOut_collect} LIMIT 1',
-        parameters: {},
+        parameters: { getAirportByCode_Airport_code: "SEA" },
         language: 'opencypher',
         refactorOutput: null
     });
@@ -462,11 +462,11 @@ test('should return type with graph query returning a scalar (Query0005)', () =>
     const result = resolveGraphDBQuery({queryObjOrStr: 'query MyQuery {\n getAirportByCode(code: \"SEA\") {\n outboundRoutesCount\n }\n }\n'});
 
     expect(result).toMatchObject({
-        query: "MATCH (getAirportByCode_Airport:`airport`{code:'SEA'})\n" +
+        query: "MATCH (getAirportByCode_Airport:`airport`{code: $getAirportByCode_Airport_code})\n" +
             'OPTIONAL MATCH (getAirportByCode_Airport)-[getAirportByCode_Airport_outboundRoutesCount_r:route]->(getAirportByCode_Airport_outboundRoutesCount_a)\n' +
             'WITH getAirportByCode_Airport, count(getAirportByCode_Airport_outboundRoutesCount_r) AS getAirportByCode_Airport_outboundRoutesCount\n' +
             'RETURN {outboundRoutesCount:getAirportByCode_Airport_outboundRoutesCount} LIMIT 1',
-        parameters: {},
+        parameters: { getAirportByCode_Airport_code: "SEA" },
         language: 'opencypher',
         refactorOutput: null
     });
@@ -477,9 +477,9 @@ test('should map type name to different graph db property name (Query0006)', () 
     const result = resolveGraphDBQuery({queryObjOrStr: 'query MyQuery {\n getAirportByCode(code: \"SEA\") {\n desc\n }\n }\n'});
 
     expect(result).toMatchObject({
-        query: "MATCH (getAirportByCode_Airport:`airport`{code:'SEA'})\n" +
+        query: "MATCH (getAirportByCode_Airport:`airport`{code: $getAirportByCode_Airport_code})\n" +
             'RETURN {desc: getAirportByCode_Airport.`desc`} LIMIT 1',
-        parameters: {},
+        parameters: { getAirportByCode_Airport_code: "SEA" },
         language: 'opencypher',
         refactorOutput: null
     });
@@ -490,9 +490,9 @@ test('should resolve query using a graphQuery returning a type (Query0007)', () 
     const result = resolveGraphDBQuery({queryObjOrStr: 'query MyQuery {\n getAirportConnection(fromCode: \"SEA\", toCode: \"BLQ\") {\n city\n code\n }\n }\n'});
 
     expect(result).toMatchObject({
-        query: "MATCH (:airport{code: 'SEA'})-[:route]->(getAirportConnection_Airport:airport)-[:route]->(:airport{code:'BLQ'})\n" +
+        query: "MATCH (:airport{code: $getAirportConnection_Airport_fromCode})-[:route]->(getAirportConnection_Airport:airport)-[:route]->(:airport{code:$getAirportConnection_Airport_toCode})\n" +
             'RETURN {city: getAirportConnection_Airport.`city`, code: getAirportConnection_Airport.`code`} LIMIT 1',
-        parameters: {},
+        parameters: { getAirportConnection_Airport_fromCode: 'SEA', getAirportConnection_Airport_toCode: 'BLQ' },
         language: 'opencypher',
         refactorOutput: null
     });
@@ -503,9 +503,9 @@ test('should resolve query using Gremlin returning a type (Query0008)', () => {
     const result = resolveGraphDBQuery({queryObjOrStr: 'query MyQuery {\n getAirportWithGremlin(code: \"SEA\") {\n _id\n city\n runways\n }\n }\n'});
 
     expect(result).toMatchObject({
-        query: "g.V().has('airport', 'code', 'SEA').elementMap()",
+        query: "g.V().has('airport', 'code', getAirportWithGremlin_Airport_code).elementMap()",
         language: 'gremlin',
-        parameters: {},
+        parameters: { getAirportWithGremlin_Airport_code: 'SEA' },
         refactorOutput: null,
         fieldsAlias: {
             id: '_id',
@@ -1087,6 +1087,49 @@ test('should resolve custom mutation with @graphQuery directive and $input param
         language: 'opencypher',
         refactorOutput: null
     });
+});
+
+test('should resolve custom mutation with @graphQuery directive and individual parameters', () => {
+    const query = 'mutation MyMutation {\n' +
+        '  addRoute(fromAirportCode: "SEA", toAirportCode: "BLQ", dist: "5765") {\n' +
+        '    _id\n' +
+        '    dist\n' +
+        '  }\n' +
+        '}';
+    const result = resolveGraphDBQuery({queryObjOrStr: query});
+
+    expect(result).toMatchObject({
+        query: 'MATCH (from:airport{code:$addRoute_Route_fromAirportCode}), (to:airport{code:$addRoute_Route_toAirportCode}) CREATE (from)-[addRoute_Route:route{dist:$addRoute_Route_dist}]->(to)\n' +
+            'RETURN {_id:ID(addRoute_Route), dist: addRoute_Route.`dist`}',
+        parameters: {
+            addRoute_Route_fromAirportCode: 'SEA',
+            addRoute_Route_toAirportCode: 'BLQ',
+            addRoute_Route_dist: '5765'
+        },
+        language: 'opencypher',
+        refactorOutput: null
+    });
+});
+
+test('should safely parameterize injection attempt in mutation @graphQuery', () => {
+    const injectionPayload = "SEA'}) RETURN this UNION MATCH (n) RETURN n //";
+    const query = `mutation MyMutation {\n  addRoute(fromAirportCode: "${injectionPayload}", toAirportCode: "BLQ", dist: "0") {\n    _id\n  }\n}`;
+    const result = resolveGraphDBQuery({queryObjOrStr: query});
+
+    // Injection payload should be in parameters, not in the query string
+    expect(result.parameters.addRoute_Route_fromAirportCode).toBe(injectionPayload);
+    expect(result.query).not.toContain("UNION");
+    expect(result.query).toContain("$addRoute_Route_fromAirportCode");
+});
+
+test('should handle special characters in mutation @graphQuery parameters', () => {
+    const query = `mutation MyMutation {\n  addRoute(fromAirportCode: "it's a test", toAirportCode: "O'Hare", dist: "100") {\n    _id\n    dist\n  }\n}`;
+    const result = resolveGraphDBQuery({queryObjOrStr: query});
+
+    expect(result.parameters.addRoute_Route_fromAirportCode).toBe("it's a test");
+    expect(result.parameters.addRoute_Route_toAirportCode).toBe("O'Hare");
+    expect(result.query).not.toContain("it's");
+    expect(result.query).toContain("$addRoute_Route_fromAirportCode");
 });
 
 test('should inference create mutation with a prefix', () => {

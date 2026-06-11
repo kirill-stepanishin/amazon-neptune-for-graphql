@@ -512,7 +512,13 @@ function createQueryFunctionMatchStatement(obj, matchStatements, querySchemaInfo
     if (querySchemaInfo.graphQuery != null) {
         var gq = querySchemaInfo.graphQuery.replaceAll('this', querySchemaInfo.pathName);
         obj.definitions[0].selectionSet.selections[0].arguments.forEach(arg => {
-            gq = gq.replace('$' + arg.name.value, arg.value.value);
+            const paramName = querySchemaInfo.pathName + '_' + arg.name.value;
+            if (gq.includes(`'$${arg.name.value}'`)) {
+                gq = gq.replaceAll(`'$${arg.name.value}'`, `$${paramName}`);
+            } else {
+                gq = gq.replaceAll(`$${arg.name.value}`, `$${paramName}`);
+            }
+            Object.assign(parameters, { [paramName]: arg.value.value });
         });
 
         matchStatements.push(gq);
@@ -579,7 +585,9 @@ function extractQueryArgsAndWhereClauses(selectionArguments, querySchemaInfo) {
                 }
             })
         } else if (selectionArgument.name?.value && selectionArgument.value?.value) {
-            queryArguments.push(`${selectionArgument.name.value}:'${selectionArgument.value.value}'`);
+            const paramName = querySchemaInfo.pathName + '_' + selectionArgument.name.value;
+            Object.assign(parameters, { [paramName]: selectionArgument.value.value });
+            queryArguments.push(`${selectionArgument.name.value}: $${paramName}`);
         }
     });
     return { queryArguments: queryArguments, whereClauses: whereClauses };
@@ -1255,7 +1263,13 @@ function resolveGraphDBqueryForGraphQLMutation (queryAst, querySchemaInfo) {
             ocQuery = ocQuery.replace('$input', formattedFields);
         } else {
             queryAst.definitions[0].selectionSet.selections[0].arguments.forEach(arg => {
-                ocQuery = ocQuery.replace('$' + arg.name.value, arg.value.value);
+                const paramName = querySchemaInfo.pathName + '_' + arg.name.value;
+                if (ocQuery.includes(`'$${arg.name.value}'`)) {
+                    ocQuery = ocQuery.replaceAll(`'$${arg.name.value}'`, `$${paramName}`);
+                } else {
+                    ocQuery = ocQuery.replaceAll(`$${arg.name.value}`, `$${paramName}`);
+                }
+                Object.assign(parameters, { [paramName]: arg.value.value });
             });
         }
 
@@ -1407,7 +1421,13 @@ function resolveGremlinQuery(obj, querySchemaInfo) {
     // replace values from input parameters
     gremlinQuery.query = querySchemaInfo.graphQuery;
     obj.definitions[0].selectionSet.selections[0].arguments.forEach(arg => {
-        gremlinQuery.query = gremlinQuery.query.replace('$' + arg.name.value, arg.value.value);
+        const paramName = querySchemaInfo.pathName + '_' + arg.name.value;
+        if (gremlinQuery.query.includes(`'$${arg.name.value}'`)) {
+            gremlinQuery.query = gremlinQuery.query.replaceAll(`'$${arg.name.value}'`, `${paramName}`);
+        } else {
+            gremlinQuery.query = gremlinQuery.query.replaceAll(`$${arg.name.value}`, `${paramName}`);
+        }
+        Object.assign(gremlinQuery.parameters, { [paramName]: arg.value.value });
     });
 
     return gremlinQuery;
