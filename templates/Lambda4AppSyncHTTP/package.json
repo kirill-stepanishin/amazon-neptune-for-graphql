@@ -11,8 +11,11 @@
   "license": "ISC",
   "dependencies": {
     "aws4-axios": "3.4.0",
-    "axios": "^1.16.0",
-    "graphql": "^16.8.1",
-    "retry-axios": "3.1.0"
+    "axios": "^1.19.0",
+    "graphql": "^16.14.2",
+    "retry-axios": "3.2.1"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

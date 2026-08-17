@@ -43,7 +43,7 @@ function evaluateTemplate({ neptuneType, neptuneIAMAuth }) {
         const lambda_role = { addManagedPolicy: (p) => managedPolicies.push(p) };
         const managedPolicies = [];
         const Duration = { seconds: (s) => s };
-        const lambda = { Code: { fromAsset: (f) => f }, Runtime: { NODEJS_22_X: 'nodejs22.x' } };
+        const lambda = { Code: { fromAsset: (f) => f }, Runtime: { NODEJS_24_X: 'nodejs24.x' } };
         const self = { parseNeptuneDomainFromHost: () => 'neptune.amazonaws.com' };
         const LAMBDA_FUNCTION_NAME = 'testFn';
         const LAMBDA_ZIP_FILE = 'test.zip';
@@ -75,6 +75,11 @@ test('neptune-db without IAM: VPC config, no IAM policy', () => {
     expect(lambdaProps.securityGroups).toBeDefined();
     expect(lambdaProps.initialPolicy).toBeUndefined();
     expect(managedPolicies).toContain('service-role/AWSLambdaVPCAccessExecutionRole');
+});
+
+test('lambda uses the nodejs24.x runtime', () => {
+    const { lambdaProps } = evaluateTemplate({ neptuneType: 'neptune-db', neptuneIAMAuth: false });
+    expect(lambdaProps.runtime).toBe('nodejs24.x');
 });
 
 test('neptune-db with IAM: VPC config and IAM policy', () => {

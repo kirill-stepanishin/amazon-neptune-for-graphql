@@ -14,6 +14,23 @@ permissions and limitations under the License.
 
 # amazon-neptune-for-graphql CHANGELOG
 
+## Unreleased
+
+### Breaking Changes
+
+* Raised the minimum supported Node.js version to v24; all packages now declare
+  `"engines": { "node": ">=24" }`.
+* Upgraded the generated Lambda runtime to `nodejs24.x` for the AWS pipeline and
+  CDK template.
+
+### Improvements
+
+* Upgraded dependencies across the CLI, templates, and test package, including
+  AWS SDK to `3.1111.0`, Apollo Server to `5.5.1`, `graphql` to `16.14.2`, and
+  `axios` to `1.19.0`.
+* CI (unit tests and npm publish) now runs on Node.js 24.
+* Regenerated `THIRD_PARTY_LICENSES.txt` for the updated dependencies.
+
 ## Release v2.1.0
 
 ### Features

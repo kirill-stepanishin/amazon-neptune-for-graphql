@@ -76,7 +76,7 @@ in the local *output* directory.
 
 ### Node.js is required in any scenario
 
-Node.js is required to run the utility, v18 or above.
+Node.js is required to run the utility, v24 or above.
 
 - To install it on macOS or Windows go to
   the [Node.js website](https://nodejs.org/) to download the installer.
